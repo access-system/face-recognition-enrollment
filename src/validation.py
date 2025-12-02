@@ -1,0 +1,58 @@
+import secrets
+import threading
+import time
+
+from api.access_system import validate_embedding, add_embedding
+
+
+class EmbeddingValidation:
+    def __init__(self, stop_event, lock, shared_embedding, log, fps = 30):
+        self.stop_event = stop_event
+        self.log = log
+
+        self.fps = fps
+
+        self.lock = lock
+        self.shared_embedding = shared_embedding
+
+    def start(self):
+        threading.Thread(target=self.validation_loop, daemon=True).start()
+
+    def validation_loop(self):
+        frame_time = 1.0 / self.fps
+
+        while True:
+            if self.stop_event.is_set():
+                self.log.info("Stop event set. Stopping validation.")
+                break
+
+            t1 = time.time()
+
+            with self.lock:
+                shared_embedding = self.shared_embedding['default']
+
+            if shared_embedding is None:
+                time.sleep(min(frame_time, 0.01))
+                continue
+
+            exists, msg = validate_embedding(shared_embedding)
+
+            if not exists:
+                status_code = add_embedding(shared_embedding, secrets.token_hex(8))
+
+                if status_code == 201:
+                    self.log.info("Embedding added successfully.")
+                else:
+                    self.log.info(f"Failed to add embedding. Status code: {status_code}")
+
+                self.stop_event.set()
+                break
+            else:
+                self.log.info("Embedding already exists.")
+                self.stop_event.set()
+                break
+
+            elapsed_time = time.time() - t1
+            # self.log.info(f"{elapsed_time:.3f} seconds per frame")
+            sleep_time = max(0.0, frame_time - elapsed_time)
+            time.sleep(sleep_time)
