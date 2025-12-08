@@ -1,7 +1,7 @@
 import flet as ft
 
-from utils.timer import timer
-from utils.converters import frame_to_base64
+from src.utils.timer import timer
+from src.utils.converters import frame_to_base64
 
 
 class EnrollmentGUI:
