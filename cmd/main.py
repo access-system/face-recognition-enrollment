@@ -6,7 +6,7 @@ from src.video_capture import VideoCapture
 from src.video_stream import VideoStream
 from src.detection import DetectionMediaPipe
 from src.recognition import RecognitionArcFace
-from src.validation import EmbeddingValidation
+from src.verification import FaceVerification
 
 
 def main():
@@ -28,7 +28,7 @@ def main():
     detection_mediapipe = DetectionMediaPipe(stop_event, lock, shared_frames, face, log, fps=fps)
     recognition_arcface = RecognitionArcFace(stop_event, lock, face, shared_embedding, log, device='GPU',
                                              fps=fps)
-    embedding_validation = EmbeddingValidation(stop_event, lock, shared_embedding, log, fps=fps)
+    embedding_validation = FaceVerification(stop_event, lock, shared_embedding, log, fps=fps)
 
     log.info("Starting pipelines...")
     video_capture.start()

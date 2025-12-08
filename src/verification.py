@@ -5,7 +5,7 @@ import time
 from api.access_system import validate_embedding, add_embedding
 
 
-class EmbeddingValidation:
+class FaceVerification:
     def __init__(self, stop_event, lock, shared_embedding, log, fps = 30):
         self.stop_event = stop_event
         self.log = log
