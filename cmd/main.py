@@ -5,7 +5,7 @@ import loguru
 
 from src.video_capture import VideoCapture
 from src.video_stream import VideoStream
-from src.detection import DetectionMediaPipe
+from src.detection import FaceDetection
 from src.recognition import RecognitionArcFace
 from src.verification import FaceVerification
 from src.app import EnrollmentGUI
@@ -27,7 +27,7 @@ def main():
     log.info("Setup pipelines...")
     video_capture = VideoCapture(stop_event, lock, shared_frames, log, fps=fps)
     video_stream = VideoStream(stop_event, lock, shared_frames, log, fps=fps)
-    detection_mediapipe = DetectionMediaPipe(stop_event, lock, shared_frames, face, log, fps=fps)
+    detection_mediapipe = FaceDetection(stop_event, lock, shared_frames, face, log, fps=fps)
     recognition_arcface = RecognitionArcFace(stop_event, lock, face, shared_embedding, log, device='GPU',
                                              fps=fps)
     embedding_validation = FaceVerification(stop_event, lock, shared_embedding, log, fps=fps)

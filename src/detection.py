@@ -9,7 +9,7 @@ FaceAlignerOptions = mp.tasks.vision.FaceAlignerOptions
 FaceAligner = mp.tasks.vision.FaceAligner
 
 
-class DetectionMediaPipe:
+class FaceDetection:
     def __init__(self, stop_event, lock, shared_frames, face, log, fps = 30):
         self.stop_event = stop_event
         self.log = log
