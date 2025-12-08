@@ -16,9 +16,9 @@ class FaceVerification:
         self.shared_embedding = shared_embedding
 
     def start(self):
-        threading.Thread(target=self.validation_loop, daemon=True).start()
+        threading.Thread(target=self.verification_loop, daemon=True).start()
 
-    def validation_loop(self):
+    def verification_loop(self):
         frame_time = 1.0 / self.fps
 
         while True:
