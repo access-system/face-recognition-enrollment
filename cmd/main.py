@@ -18,7 +18,7 @@ def main():
     log = loguru.logger
 
     shared_frames = {'default': None, 'processed': None}
-    face = {'aligned': None}
+    face = {'detected': None, 'validated': None, 'aligned': None}
     shared_embedding = {'default': None}
 
     log.info("Set FPS to 20...")
