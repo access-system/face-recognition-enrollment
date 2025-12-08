@@ -1,5 +1,6 @@
 import threading
 
+import flet as ft
 import loguru
 
 from src.video_capture import VideoCapture
@@ -7,6 +8,7 @@ from src.video_stream import VideoStream
 from src.detection import DetectionMediaPipe
 from src.recognition import RecognitionArcFace
 from src.verification import FaceVerification
+from src.app import EnrollmentGUI
 
 
 def main():
@@ -36,8 +38,11 @@ def main():
     recognition_arcface.start()
     embedding_validation.start()
 
-    log.info("Starting video stream...")
-    video_stream.start()
+    # log.info("Starting video stream...")
+    # video_stream.start()
+
+    app = EnrollmentGUI(lock, shared_frames, stop_event)
+    ft.app(target=app.app)
 
 
 if __name__ == '__main__':
