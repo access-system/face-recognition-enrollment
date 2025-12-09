@@ -48,7 +48,7 @@ class FaceDetection:
             if results[0] is not None:
                 # Make bounding boxes
                 bboxes = make_bboxes(default_frame, results[0])
-                if bboxes is not None:
+                if bboxes is not None and len(bboxes) > 0:
                     face_roi = self.get_face_roi(default_frame, bboxes[0])
 
                     if face_roi is not None:
