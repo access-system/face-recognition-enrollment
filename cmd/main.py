@@ -4,8 +4,8 @@ import flet as ft
 import loguru
 
 from src.video_capture import VideoCapture
-from src.video_stream import VideoStream
 from src.detection import FaceDetection
+from src.alignment import FaceAlignment
 from src.recognition import RecognitionArcFace
 from src.verification import FaceVerification
 from src.app import EnrollmentGUI
@@ -22,12 +22,12 @@ def main():
     shared_embedding = {'default': None}
 
     log.info("Set FPS to 20...")
-    fps = 20
+    fps = 30
 
     log.info("Setup pipelines...")
     video_capture = VideoCapture(stop_event, lock, shared_frames, log, fps=fps)
-    video_stream = VideoStream(stop_event, lock, shared_frames, log, fps=fps)
     detection_mediapipe = FaceDetection(stop_event, lock, shared_frames, face, log, fps=fps)
+    face_alignment = FaceAlignment(stop_event, lock, face, face, log, fps=fps)
     recognition_arcface = RecognitionArcFace(stop_event, lock, face, shared_embedding, log, device='GPU',
                                              fps=fps)
     embedding_validation = FaceVerification(stop_event, lock, shared_embedding, log, fps=fps)
@@ -35,11 +35,9 @@ def main():
     log.info("Starting pipelines...")
     video_capture.start()
     detection_mediapipe.start()
+    face_alignment.start()
     recognition_arcface.start()
     embedding_validation.start()
-
-    # log.info("Starting video stream...")
-    # video_stream.start()
 
     app = EnrollmentGUI(lock, shared_frames, stop_event)
     ft.app(target=app.app)

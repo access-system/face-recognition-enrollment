@@ -4,9 +4,6 @@ import time
 import cv2
 
 import mediapipe as mp
-BaseOptions = mp.tasks.BaseOptions
-FaceAlignerOptions = mp.tasks.vision.FaceAlignerOptions
-FaceAligner = mp.tasks.vision.FaceAligner
 
 
 class FaceDetection:
@@ -18,10 +15,6 @@ class FaceDetection:
 
         # Initialize MediaPipe Face Detection
         self.init_face_detection()
-
-        # Initialize MediaPipe Face Aligner
-        self.landmarker_model_path = "models/face_landmarker.task"
-        self.init_face_aligner()
 
         # Initialize MediaPipe Drawing Utils
         self.mp_drawing = mp.solutions.drawing_utils
@@ -50,44 +43,39 @@ class FaceDetection:
                 time.sleep(min(frame_time, 0.01))
                 continue
 
-            # If results is not None:
-            # - make bboxes, align face, put aligned face into output
-            # - draw detections on frame, put processed frame into output
-            # Else:
-            # - put None into processed frame output
-
             # Detect faces
             results = self.detect_face(default_frame)
-            if results is not None:
+            if results[0] is not None:
                 # Make bounding boxes
                 bboxes = make_bboxes(default_frame, results[0])
                 if bboxes is not None:
-                    # Align face (use the first detected face)
-                    aligned_face = self.align_face(default_frame, bboxes[0])
-                    if aligned_face is not None:
-                        # Put aligned face into output
+                    face_roi = self.get_face_roi(default_frame, bboxes[0])
+
+                    if face_roi is not None:
                         with self.lock:
-                            self.face['aligned'] = aligned_face
+                            self.face['detected'] = face_roi
+                    else:
+                        with self.lock:
+                            self.face['detected'] = None
+                else:
+                    with self.lock:
+                        self.face['detected'] = None
 
                 processed_frame = self.draw_detections(default_frame, results[0])
                 with self.lock:
                     self.shared_frames['processed'] = processed_frame
 
+            else:
+                with self.lock:
+                    self.face['detected'] = None
+
             elapsed_time = time.time() - t1
-            # self.log.info(f"{elapsed_time:.3f} seconds per frame")
             sleep_time = max(0.0, frame_time - elapsed_time)
             time.sleep(sleep_time)
 
     def init_face_detection(self):
         mp_face_detection = mp.solutions.face_detection.FaceDetection
         self.face_detection = mp_face_detection(model_selection=0, min_detection_confidence=0.5)
-
-    def init_face_aligner(self):
-        with open(self.landmarker_model_path, 'rb') as f:
-            model_data = f.read()
-        base_options = BaseOptions(model_asset_buffer=model_data)
-        options = FaceAlignerOptions(base_options=base_options)
-        self.face_aligner = FaceAligner.create_from_options(options)
 
     # Detect face using MediaPipe Face Detection
     def detect_face(self, frame):
@@ -96,9 +84,7 @@ class FaceDetection:
 
         return detections
 
-    # Align face using MediaPipe Face Aligner
-    def align_face(self, frame, bbox):
-        # Extract face ROI
+    def get_face_roi(self, frame, bbox):
         x, y, w, h = bbox
         frame_h, frame_w = frame.shape[:2]
 
@@ -114,7 +100,7 @@ class FaceDetection:
 
         # Check for valid ROI
         if roi_w <= 0 or roi_h <= 0:
-            self.log.error("Invalid ROI for face alignment.")
+            self.log.error("Invalid ROI size.")
             return None
 
         # Extract the region of interest
@@ -122,29 +108,10 @@ class FaceDetection:
 
         # Check if the ROI is valid
         if face_roi.size == 0:
-            self.log.error("Invalid ROI size for face alignment.")
+            self.log.error("Invalid ROI size.")
             return None
 
-        try:
-            # Convert to RGB for MediaPipe
-            face_roi_rgb = cv2.cvtColor(face_roi, cv2.COLOR_BGR2RGB)
-
-            # Create MediaPipe Image
-            mp_image = mp.Image(
-                image_format=mp.ImageFormat.SRGB,
-                data=face_roi_rgb
-            )
-
-            # Align face
-            aligned_face = self.face_aligner.align(mp_image)
-
-            if aligned_face is not None:
-                # Convert back to BGR
-                return cv2.cvtColor(aligned_face.numpy_view(), cv2.COLOR_RGB2BGR)
-            return None
-
-        except:
-            return None
+        return face_roi
 
     # Draw detections on frame
     def draw_detections(self, frame, results):
