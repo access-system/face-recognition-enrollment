@@ -78,8 +78,11 @@ class EnrollmentGUI:
             self.image.visible = has_frame
             self.placeholder.visible = not has_frame
 
+            frame = self.select_frame()
+            frame = cv2.flip(frame, 1)
+
             if has_frame:
-                self.image.src_base64 = frame_to_base64(self.select_frame())
+                self.image.src_base64 = frame_to_base64(frame)
 
             self.image.update()
             self.placeholder.update()
