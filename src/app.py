@@ -46,10 +46,8 @@ class EnrollmentGUI:
     def toggle_enrollment(self, e):
         if not self.run_state_event.is_set():
             self.run_state_event.set()
-            self.run_state_btn.text = "Stop Enrollment"
         else:
             self.run_state_event.clear()
-            self.run_state_btn.text = "Start Enrollment"
 
         self.run_state_btn.update()
 
