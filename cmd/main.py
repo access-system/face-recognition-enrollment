@@ -32,7 +32,7 @@ def main():
     face_alignment = FaceAlignment(stop_event, lock, face, face, log, fps=fps)
     recognition_arcface = RecognitionArcFace(stop_event, lock, face, shared_embedding, log, device='GPU',
                                              fps=fps)
-    embedding_validation = FaceVerification(stop_event, lock, shared_embedding, log, fps=fps)
+    face_verification = FaceVerification(stop_event, run_state_event, lock, shared_embedding, log, fps=fps)
 
     log.info("Starting pipelines...")
     video_capture.start()
@@ -40,7 +40,7 @@ def main():
     face_validation.start()
     face_alignment.start()
     recognition_arcface.start()
-    embedding_validation.start()
+    face_verification.start()
 
     app = EnrollmentGUI(lock, shared_frames, stop_event)
     ft.app(target=app.app)
