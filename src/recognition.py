@@ -7,7 +7,7 @@ import cv2
 
 
 class RecognitionArcFace:
-    def __init__(self, stop_event, run_state_event, lock, face, shared_embedding, log, device = 'CPU', fps = 30):
+    def __init__(self, stop_event, run_state_event, lock, shared_face, shared_embedding, log, device = 'CPU', fps = 30):
         self.run_state_event = run_state_event
         self.stop_event = stop_event
         self.log = log
@@ -19,7 +19,7 @@ class RecognitionArcFace:
         self.init_arcface()
 
         self.lock = lock
-        self.face = face
+        self.shared_face = shared_face
         self.shared_embedding = shared_embedding
 
     def init_arcface(self):
@@ -46,7 +46,7 @@ class RecognitionArcFace:
             t1 = time.time()
 
             with self.lock:
-                aligned_face = self.face['aligned']
+                aligned_face = self.shared_face['aligned']
 
             if aligned_face is None:
                 time.sleep(min(frame_time, 0.01))

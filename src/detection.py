@@ -7,7 +7,7 @@ import mediapipe as mp
 
 
 class FaceDetection:
-    def __init__(self, stop_event, lock, shared_frames, face, log, fps = 30):
+    def __init__(self, stop_event, lock, shared_frames, shared_face, log, fps = 30):
         self.stop_event = stop_event
         self.log = log
 
@@ -21,7 +21,7 @@ class FaceDetection:
 
         self.lock = lock
         self.shared_frames = shared_frames # latest, processed
-        self.face = face
+        self.shared_face = shared_face
 
     def start(self):
         threading.Thread(target=self.detection_loop, daemon=True).start()
@@ -53,13 +53,13 @@ class FaceDetection:
 
                     if face_roi is not None:
                         with self.lock:
-                            self.face['detected'] = face_roi
+                            self.shared_face['detected'] = face_roi
                     else:
                         with self.lock:
-                            self.face['detected'] = None
+                            self.shared_face['detected'] = None
                 else:
                     with self.lock:
-                        self.face['detected'] = None
+                        self.shared_face['detected'] = None
 
                 processed_frame = self.draw_detections(default_frame, results[0])
                 with self.lock:
@@ -67,7 +67,7 @@ class FaceDetection:
 
             else:
                 with self.lock:
-                    self.face['detected'] = None
+                    self.shared_face['detected'] = None
 
             elapsed_time = time.time() - t1
             sleep_time = max(0.0, frame_time - elapsed_time)
