@@ -42,7 +42,7 @@ class FaceAlignment:
             t1 = time.time()
 
             with self.lock:
-                face_roi = self.shared_frames['validated']
+                face_roi = self.shared_face['validated']
 
             if face_roi is None:
                 with self.lock:
