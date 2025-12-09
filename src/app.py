@@ -1,3 +1,4 @@
+import cv2
 import flet as ft
 
 from src.utils.timer import timer
@@ -78,9 +79,19 @@ class EnrollmentGUI:
             self.placeholder.visible = not has_frame
 
             if has_frame:
-                self.image.src_base64 = frame_to_base64(default_frame)
+                self.image.src_base64 = frame_to_base64(self.select_frame())
 
             self.image.update()
             self.placeholder.update()
 
         update_frame()
+
+    def select_frame(self):
+        with self.lock:
+            default_frame = self.shared_frames["default"]
+            processed_frame = self.shared_frames["processed"]
+
+        if processed_frame is not None:
+            return processed_frame
+        else:
+            return default_frame
