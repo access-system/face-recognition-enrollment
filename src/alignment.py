@@ -35,6 +35,9 @@ class FaceAlignment:
                 break
 
             if not self.run_state_event.is_set():
+                with self.lock:
+                    self.shared_face['aligned'] = None
+
                 time.sleep(min(frame_time, 0.01))
                 continue
 

@@ -54,9 +54,14 @@ class RecognitionArcFace:
 
             embedding = self.recognize(aligned_face)
 
-            normalized_embedding = l2_norm(embedding)
-            with self.lock:
-                self.shared_embedding['default'] = normalized_embedding
+            if embedding is not None:
+                normalized_embedding = l2_norm(embedding)
+                with self.lock:
+                    self.shared_embedding['default'] = normalized_embedding
+            else:
+                with self.lock:
+                    self.shared_embedding['default'] = None
+
             # self.log.info("New embedding computed and stored.")
 
             elapsed_time = time.time() - t1
