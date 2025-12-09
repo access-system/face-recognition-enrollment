@@ -9,7 +9,7 @@ FaceAligner = mp.tasks.vision.FaceAligner
 
 
 class FaceAlignment:
-    def __init__(self, stop_event, run_state_event, lock, shared_frames, shared_face, log, fps = 30):
+    def __init__(self, stop_event, run_state_event, lock, shared_face, log, fps = 30):
         self.run_state_event = run_state_event
         self.stop_event = stop_event
         self.log = log
@@ -21,7 +21,6 @@ class FaceAlignment:
         self.init_face_aligner()
 
         self.lock = lock
-        self.shared_frames = shared_frames
         self.shared_face = shared_face
 
     def start(self):
