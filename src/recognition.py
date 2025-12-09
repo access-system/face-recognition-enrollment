@@ -7,7 +7,8 @@ import cv2
 
 
 class RecognitionArcFace:
-    def __init__(self, stop_event, lock, face, shared_embedding, log, device = 'CPU', fps = 30):
+    def __init__(self, stop_event, run_state_event, lock, face, shared_embedding, log, device = 'CPU', fps = 30):
+        self.run_state_event = run_state_event
         self.stop_event = stop_event
         self.log = log
 
@@ -37,6 +38,10 @@ class RecognitionArcFace:
             if self.stop_event.is_set():
                 self.log.info("Stop event set. Stopping recognition.")
                 break
+
+            if not self.run_state_event.is_set():
+                time.sleep(min(frame_time, 0.01))
+                continue
 
             t1 = time.time()
 

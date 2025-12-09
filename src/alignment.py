@@ -9,7 +9,8 @@ FaceAligner = mp.tasks.vision.FaceAligner
 
 
 class FaceAlignment:
-    def __init__(self, stop_event, lock, shared_frames, shared_face, log, fps = 30):
+    def __init__(self, stop_event, run_state_event, lock, shared_frames, shared_face, log, fps = 30):
+        self.run_state_event = run_state_event
         self.stop_event = stop_event
         self.log = log
 
@@ -33,6 +34,10 @@ class FaceAlignment:
             if self.stop_event.is_set():
                 self.log.info("Stop event set. Stopping alignment.")
                 break
+
+            if not self.run_state_event.is_set():
+                time.sleep(min(frame_time, 0.01))
+                continue
 
             t1 = time.time()
 

@@ -6,7 +6,8 @@ from api.access_system import validate_embedding, add_embedding
 
 
 class FaceVerification:
-    def __init__(self, stop_event, lock, shared_embedding, log, fps = 30):
+    def __init__(self, stop_event, run_state_event, lock, shared_embedding, log, fps = 30):
+        self.run_state_event = run_state_event
         self.stop_event = stop_event
         self.log = log
 
@@ -25,6 +26,10 @@ class FaceVerification:
             if self.stop_event.is_set():
                 self.log.info("Stop event set. Stopping validation.")
                 break
+
+            if not self.run_state_event.is_set():
+                time.sleep(min(frame_time, 0.01))
+                continue
 
             t1 = time.time()
 
@@ -49,8 +54,8 @@ class FaceVerification:
                 break
             else:
                 self.log.info("Embedding already exists.")
-                self.stop_event.set()
-                break
+                # self.stop_event.set()
+                # break
 
             elapsed_time = time.time() - t1
             # self.log.info(f"{elapsed_time:.3f} seconds per frame")

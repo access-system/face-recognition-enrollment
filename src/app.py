@@ -5,7 +5,8 @@ from src.utils.converters import frame_to_base64
 
 
 class EnrollmentGUI:
-    def __init__(self, lock, shared_frames, stop_event, fps=30):
+    def __init__(self, lock, shared_frames, stop_event, run_state_event, fps=30):
+        self.run_state_event = run_state_event
         self.stop_event = stop_event
         self.fps = fps
 
@@ -36,6 +37,21 @@ class EnrollmentGUI:
             height=480,
         )
 
+        self.run_state_btn = ft.ElevatedButton(
+            text="Start Enrollment",
+            on_click=self.toggle_enrollment,
+        )
+
+    def toggle_enrollment(self, e):
+        if not self.run_state_event.is_set():
+            self.run_state_event.set()
+            self.run_state_btn.text = "Stop Enrollment"
+        else:
+            self.run_state_event.clear()
+            self.run_state_btn.text = "Start Enrollment"
+
+        self.run_state_btn.update()
+
     def app(self, page: ft.Page):
         page.title = "Enrollment GUI"
         page.on_close = lambda e: self.stop_event.set()
@@ -44,6 +60,7 @@ class EnrollmentGUI:
             ft.Row(
                 [
                     self.frame,
+                    self.run_state_btn,
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
             )
