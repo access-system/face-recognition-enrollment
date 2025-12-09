@@ -5,6 +5,7 @@ import loguru
 
 from src.video_capture import VideoCapture
 from src.detection import FaceDetection
+from src.validation import FaceValidation
 from src.alignment import FaceAlignment
 from src.recognition import RecognitionArcFace
 from src.verification import FaceVerification
@@ -27,6 +28,7 @@ def main():
     log.info("Setup pipelines...")
     video_capture = VideoCapture(stop_event, lock, shared_frames, log, fps=fps)
     detection_mediapipe = FaceDetection(stop_event, lock, shared_frames, face, log, fps=fps)
+    face_validation = FaceValidation(stop_event, lock, shared_frames, face, log, fps=fps)
     face_alignment = FaceAlignment(stop_event, lock, face, face, log, fps=fps)
     recognition_arcface = RecognitionArcFace(stop_event, lock, face, shared_embedding, log, device='GPU',
                                              fps=fps)
@@ -35,6 +37,7 @@ def main():
     log.info("Starting pipelines...")
     video_capture.start()
     detection_mediapipe.start()
+    face_validation.start()
     face_alignment.start()
     recognition_arcface.start()
     embedding_validation.start()
