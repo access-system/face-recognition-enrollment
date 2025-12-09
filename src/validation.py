@@ -60,7 +60,7 @@ class FaceValidation:
             if not glare:
                 yaw, pitch, roll = self.estimate_head_pose(face_roi)
 
-                self.log.info(f"BRISQUE score: {score:.2f}, Yaw: {yaw:.2f}, Pitch: {pitch:.2f}, Roll: {roll:.2f}")
+                self.log.info(f"Glare: {glare_msg}, Yaw: {yaw:.2f}, Pitch: {pitch:.2f}, Roll: {roll:.2f}")
 
                 if abs(yaw) < 15 and abs(pitch) < 15 and abs(roll) < 15:
                     with self.lock:
