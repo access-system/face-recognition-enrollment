@@ -50,12 +50,10 @@ class FaceVerification:
                 else:
                     self.log.info(f"Failed to add embedding. Status code: {status_code}")
 
-                self.stop_event.set()
-                break
+                self.run_state_event.clear()
             else:
                 self.log.info("Embedding already exists.")
-                # self.stop_event.set()
-                # break
+                self.run_state_event.clear()
 
             elapsed_time = time.time() - t1
             # self.log.info(f"{elapsed_time:.3f} seconds per frame")
