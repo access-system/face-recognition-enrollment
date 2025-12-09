@@ -4,7 +4,6 @@ import time
 import numpy as np
 import cv2
 import openvino as ov
-from brisque import BRISQUE
 
 
 class FaceValidation:
@@ -21,8 +20,6 @@ class FaceValidation:
         self.lock = lock
         self.shared_frames = shared_frames
         self.shared_face = shared_face
-
-        self.brisque = BRISQUE(url=False)
 
     def init_model(self):
         self.hpea_model_path = "models/head-pose-estimation-adas-0001/FP32/head-pose-estimation-adas-0001.xml"
@@ -58,9 +55,9 @@ class FaceValidation:
                 time.sleep(min(frame_time, 0.01))
                 continue
 
-            score = self.brisque.score(face_roi)
+            glare, glare_msg = glare_detection(face_roi)
 
-            if score > 50:
+            if not glare:
                 yaw, pitch, roll = self.estimate_head_pose(face_roi)
 
                 self.log.info(f"BRISQUE score: {score:.2f}, Yaw: {yaw:.2f}, Pitch: {pitch:.2f}, Roll: {roll:.2f}")
@@ -105,3 +102,23 @@ class FaceValidation:
         frame = frame.reshape((n, c, h, w))
 
         return frame
+
+
+def glare_detection(face_roi):
+    gray = cv2.cvtColor(face_roi, cv2.COLOR_BGR2GRAY)
+    hsv = cv2.cvtColor(face_roi, cv2.COLOR_BGR2HSV)
+
+    # Hotspots
+    white_mask = gray > 230
+    glare_ratio = np.sum(white_mask) / gray.size
+    if glare_ratio > 0.05:
+        return True, f"Glare: {glare_ratio*100:.1f}% white pixels"
+
+    # Specular
+    v_channel = hsv[:, :, 2]
+    s_channel = hsv[:, :, 1]
+    specular_mask = (v_channel > 220) & (s_channel < 50)
+    if np.sum(specular_mask) / gray.size > 0.03:
+        return True, "High specular highlights"
+
+    return False, "No glare"
