@@ -30,6 +30,11 @@ class FaceValidation:
         self.hpea_compiled = self.core.compile_model(model=self.hpea_model,
                                                      device_name=self.device)
 
+        self.input_port = self.hpea_compiled.input(0)
+        self.output_y = self.hpea_compiled.output('angle_y_fc')
+        self.output_p = self.hpea_compiled.output('angle_p_fc')
+        self.output_r = self.hpea_compiled.output('angle_r_fc')
+
     def start(self):
         threading.Thread(target=self.validation_loop, daemon=True).start()
 
@@ -75,23 +80,20 @@ class FaceValidation:
             time.sleep(sleep_time)
 
     def estimate_head_pose(self, face_image):
-        input_blob = next(iter(self.hpea_compiled.inputs))
-        output_blobs = self.hpea_compiled.outputs
-
         preprocessed_image = self.preprocess_hpea(face_image)
 
         # Perform inference
-        result = self.hpea_compiled({input_blob: preprocessed_image})
+        result = self.hpea_compiled({self.input_port: preprocessed_image})
 
         # Extract yaw, pitch, roll
-        yaw = result[output_blobs[0]][0][0]
-        pitch = result[output_blobs[1]][0][0]
-        roll = result[output_blobs[2]][0][0]
+        yaw = float(result[self.output_y][0][0])
+        pitch = float(result[self.output_p][0][0])
+        roll = float(result[self.output_r][0][0])
 
         return yaw, pitch, roll
 
     def preprocess_hpea(self, frame):
-        n, c, h, w = self.hpea_compiled.input(0).shape
+        n, c, h, w = self.input_port.shape
 
         # Resize
         frame = cv2.resize(frame, (h, w))
