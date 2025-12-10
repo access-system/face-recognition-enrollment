@@ -3,12 +3,12 @@ import threading
 import flet as ft
 import loguru
 
-from src.video_capture import VideoCapture
-from src.detection import FaceDetection
-from src.validation import FaceValidation
-from src.alignment import FaceAlignment
-from src.recognition import RecognitionArcFace
-from src.verification import FaceVerification
+from src.pipelines.video_capture import VideoCapture
+from src.pipelines.detection import FaceDetection
+from src.pipelines.validation import FaceValidation
+from src.pipelines.alignment import FaceAlignment
+from src.pipelines.recognition import RecognitionArcFace
+from src.pipelines.verification import FaceVerification
 from src.app import EnrollmentGUI
 
 from src.pipeline_manager import PipelineManager
