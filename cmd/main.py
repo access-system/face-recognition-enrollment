@@ -26,8 +26,8 @@ def main():
     shared_face = {'detected': None, 'validated': None, 'aligned': None}
     shared_embedding = {'default': None}
 
-    log.info("Set FPS to 20...")
     fps = 30
+    log.info(f"Set FPS to {fps}...")
 
     device = 'GPU'
 
