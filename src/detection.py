@@ -5,9 +5,13 @@ import cv2
 
 import mediapipe as mp
 
+from src.blackboard import BlackboardStateful
 
-class FaceDetection:
-    def __init__(self, stop_event, lock, shared_frames, shared_face, log, fps = 30):
+
+class FaceDetection(BlackboardStateful):
+    def __init__(self, stop_event, log, fps = 30):
+        super().__init__()
+
         self.stop_event = stop_event
         self.log = log
 
@@ -18,10 +22,6 @@ class FaceDetection:
 
         # Initialize MediaPipe Drawing Utils
         self.mp_drawing = mp.solutions.drawing_utils
-
-        self.lock = lock
-        self.shared_frames = shared_frames # latest, processed
-        self.shared_face = shared_face
 
     def start(self):
         threading.Thread(target=self.detection_loop, daemon=True).start()
@@ -36,8 +36,7 @@ class FaceDetection:
 
             t1 = time.time()
 
-            with self.lock:
-                default_frame = self.shared_frames['default']
+            default_frame = self.get_state("default_frame")
 
             if default_frame is None:
                 time.sleep(min(frame_time, 0.01))
@@ -52,22 +51,17 @@ class FaceDetection:
                     face_roi = self.get_face_roi(default_frame, bboxes[0])
 
                     if face_roi is not None:
-                        with self.lock:
-                            self.shared_face['detected'] = face_roi
+                        self.set_state("detected_face", face_roi)
                     else:
-                        with self.lock:
-                            self.shared_face['detected'] = None
+                        self.set_state("detected_face", None)
                 else:
-                    with self.lock:
-                        self.shared_face['detected'] = None
+                    self.set_state("detected_face", None)
 
                 processed_frame = self.draw_detections(default_frame, results[0])
-                with self.lock:
-                    self.shared_frames['processed'] = processed_frame
+                self.set_state("processed_frame", processed_frame)
 
             else:
-                with self.lock:
-                    self.shared_face['detected'] = None
+                self.set_state("detected_face", None)
 
             elapsed_time = time.time() - t1
             sleep_time = max(0.0, frame_time - elapsed_time)

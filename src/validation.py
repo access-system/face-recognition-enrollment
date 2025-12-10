@@ -5,10 +5,16 @@ import numpy as np
 import cv2
 import openvino as ov
 
+from src.blackboard import BlackboardStateful
 
-class FaceValidation:
-    def __init__(self, stop_event, lock, shared_frames, shared_face, log, fps=30, device='CPU'):
+
+class FaceValidation(BlackboardStateful):
+    def __init__(self, stop_event, run_state_event, log, fps=30, device='CPU'):
+        super().__init__()
+
         self.stop_event = stop_event
+        self.run_state_event = run_state_event
+
         self.log = log
 
         self.fps = fps
@@ -16,10 +22,6 @@ class FaceValidation:
         self.core = ov.Core()
         self.device = device
         self.init_model()
-
-        self.lock = lock
-        self.shared_frames = shared_frames
-        self.shared_face = shared_face
 
     def init_model(self):
         self.hpea_model_path = "models/head-pose-estimation-adas-0001/FP32/head-pose-estimation-adas-0001.xml"
@@ -45,12 +47,10 @@ class FaceValidation:
 
             t1 = time.time()
 
-            with self.lock:
-                face_roi = self.shared_face['detected']
+            face_roi = self.get_state("detected_face")
 
             if face_roi is None:
-                with self.lock:
-                    self.shared_face['validated'] = None
+                self.set_state("validated_face", None)
 
                 time.sleep(min(frame_time, 0.01))
                 continue
@@ -65,12 +65,13 @@ class FaceValidation:
                 if abs(yaw) < 15 and abs(pitch) < 15 and abs(roll) < 15:
                     with self.lock:
                         self.shared_face['validated'] = face_roi
+                    self.set_state("validated_face", face_roi)
                 else:
-                    with self.lock:
-                        self.shared_face['validated'] = None
+                    self.set_state("validated_face", None)
+                    self.run_state_event.clear()
             else:
-                with self.lock:
-                    self.shared_face['validated'] = None
+                self.set_state("validated_face", None)
+                self.run_state_event.clear()
 
             elapsed_time = time.time() - t1
             sleep_time = max(0.0, frame_time - elapsed_time)

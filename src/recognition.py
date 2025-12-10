@@ -5,9 +5,13 @@ import openvino as ov
 import numpy as np
 import cv2
 
+from src.blackboard import BlackboardStateful
 
-class RecognitionArcFace:
-    def __init__(self, stop_event, run_state_event, lock, shared_face, shared_embedding, log, device = 'CPU', fps = 30):
+
+class RecognitionArcFace(BlackboardStateful):
+    def __init__(self, stop_event, run_state_event, log, device = 'CPU', fps = 30):
+        super().__init__()
+
         self.run_state_event = run_state_event
         self.stop_event = stop_event
         self.log = log
@@ -17,10 +21,6 @@ class RecognitionArcFace:
         self.core = ov.Core()
         self.device = device
         self.init_arcface()
-
-        self.lock = lock
-        self.shared_face = shared_face
-        self.shared_embedding = shared_embedding
 
     def init_arcface(self):
         self.arcface_resnet100_model_path = "models/arcfaceresnet100-8.onnx"
@@ -45,8 +45,7 @@ class RecognitionArcFace:
 
             t1 = time.time()
 
-            with self.lock:
-                aligned_face = self.shared_face['aligned']
+            aligned_face = self.get_state("aligned_face")
 
             if aligned_face is None:
                 time.sleep(min(frame_time, 0.01))
@@ -56,13 +55,9 @@ class RecognitionArcFace:
 
             if embedding is not None:
                 normalized_embedding = l2_norm(embedding)
-                with self.lock:
-                    self.shared_embedding['default'] = normalized_embedding
+                self.set_state("embedding", normalized_embedding)
             else:
-                with self.lock:
-                    self.shared_embedding['default'] = None
-
-            # self.log.info("New embedding computed and stored.")
+                self.set_state("embedding", None)
 
             elapsed_time = time.time() - t1
             # self.log.info(f"{elapsed_time:.3f} seconds per frame")

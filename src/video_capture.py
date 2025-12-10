@@ -3,16 +3,17 @@ import time
 
 import cv2
 
+from src.blackboard import BlackboardStateful
 
-class VideoCapture:
-    def __init__(self, stop_event, lock, shared_frames, log, fps = 30):
+
+class VideoCapture(BlackboardStateful):
+    def __init__(self, stop_event, log, fps = 30):
+        super().__init__()
+
         self.stop_event = stop_event
         self.log = log
 
         self.fps = fps
-
-        self.lock = lock
-        self.shared_frames = shared_frames
 
     def start(self):
         threading.Thread(target=self.capture_loop, daemon=True).start()
@@ -36,8 +37,7 @@ class VideoCapture:
                 continue
 
             # Put frame into output
-            with self.lock:
-                self.shared_frames['default'] = frame
+            self.set_state("default_frame", frame)
 
             elapsed_time = time.time() - t1
             sleep_time = max(0.0, frame_time - elapsed_time)

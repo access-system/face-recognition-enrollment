@@ -3,13 +3,18 @@ import time
 
 import cv2
 import mediapipe as mp
+
+from src.blackboard import BlackboardStateful
+
 BaseOptions = mp.tasks.BaseOptions
 FaceAlignerOptions = mp.tasks.vision.FaceAlignerOptions
 FaceAligner = mp.tasks.vision.FaceAligner
 
 
-class FaceAlignment:
-    def __init__(self, stop_event, run_state_event, lock, shared_face, log, fps = 30):
+class FaceAlignment(BlackboardStateful):
+    def __init__(self, stop_event, run_state_event, log, fps = 30):
+        super().__init__()
+
         self.run_state_event = run_state_event
         self.stop_event = stop_event
         self.log = log
@@ -19,9 +24,6 @@ class FaceAlignment:
         # Initialize MediaPipe Face Aligner
         self.landmarker_model_path = "models/face_landmarker.task"
         self.init_face_aligner()
-
-        self.lock = lock
-        self.shared_face = shared_face
 
     def start(self):
         threading.Thread(target=self.alignment_loop, daemon=True).start()
@@ -35,20 +37,17 @@ class FaceAlignment:
                 break
 
             if not self.run_state_event.is_set():
-                with self.lock:
-                    self.shared_face['aligned'] = None
+                self.set_state("aligned_face", None)
 
                 time.sleep(min(frame_time, 0.01))
                 continue
 
             t1 = time.time()
 
-            with self.lock:
-                face_roi = self.shared_face['validated']
+            face_roi = self.get_state("detected_face")
 
             if face_roi is None:
-                with self.lock:
-                    self.shared_face['aligned'] = None
+                self.set_state("aligned_face", None)
 
                 time.sleep(min(frame_time, 0.01))
                 continue
@@ -57,11 +56,9 @@ class FaceAlignment:
             aligned_face = self.align_face(face_roi)
 
             if aligned_face is not None:
-                with self.lock:
-                    self.shared_face['aligned'] = aligned_face
+                self.set_state("aligned_face", aligned_face)
             else:
-                with self.lock:
-                    self.shared_face['aligned'] = None
+                self.set_state("aligned_face", None)
 
             elapsed_time = time.time() - t1
             sleep_time = max(0.0, frame_time - elapsed_time)

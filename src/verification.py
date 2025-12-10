@@ -3,18 +3,18 @@ import threading
 import time
 
 from api.access_system import validate_embedding, add_embedding
+from src.blackboard import BlackboardStateful
 
 
-class FaceVerification:
-    def __init__(self, stop_event, run_state_event, lock, shared_embedding, log, fps = 30):
+class FaceVerification(BlackboardStateful):
+    def __init__(self, stop_event, run_state_event, log, fps = 30):
+        super().__init__()
+
         self.run_state_event = run_state_event
         self.stop_event = stop_event
         self.log = log
 
         self.fps = fps
-
-        self.lock = lock
-        self.shared_embedding = shared_embedding
 
     def start(self):
         threading.Thread(target=self.verification_loop, daemon=True).start()
@@ -33,8 +33,7 @@ class FaceVerification:
 
             t1 = time.time()
 
-            with self.lock:
-                shared_embedding = self.shared_embedding['default']
+            shared_embedding = self.get_state("embedding")
 
             if shared_embedding is None:
                 time.sleep(min(frame_time, 0.01))
