@@ -81,7 +81,7 @@ def preprocess_arcface(frame):
     # Convert BGR to RGB
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     # Resize
-    frame = cv2.resize(frame, (112, 112))
+    frame = cv2.resize(frame, (112, 112), interpolation=cv2.INTER_LINEAR)
     # Scale to [0, 1]
     frame = frame.astype(np.float32)
     # Change data layout from HWC to CHW

@@ -94,7 +94,7 @@ class FaceValidation(BlackboardStateful):
         n, c, h, w = self.input_port.shape
 
         # Resize
-        frame = cv2.resize(frame, (h, w))
+        frame = cv2.resize(frame, (h, w), interpolation=cv2.INTER_LINEAR)
         # Scale to [0, 1]
         frame = frame.astype(np.float32)
         # Change data layout from HWC to CHW
