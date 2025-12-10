@@ -60,11 +60,7 @@ class FaceValidation(BlackboardStateful):
             if not glare:
                 yaw, pitch, roll = self.estimate_head_pose(face_roi)
 
-                self.log.info(f"Glare: {glare_msg}, Yaw: {yaw:.2f}, Pitch: {pitch:.2f}, Roll: {roll:.2f}")
-
-                if abs(yaw) < 15 and abs(pitch) < 15 and abs(roll) < 15:
-                    with self.lock:
-                        self.shared_face['validated'] = face_roi
+                if abs(yaw) < 30.0 and abs(pitch) < 30.0 and abs(roll) < 30.0:
                     self.set_state("validated_face", face_roi)
                 else:
                     self.set_state("validated_face", None)
