@@ -15,16 +15,10 @@ from src.pipeline_manager import PipelineManager
 
 
 def main():
-    lock = threading.Lock()
-
     run_state_event = threading.Event()
     stop_event = threading.Event()
 
     log = loguru.logger
-
-    shared_frames = {'default': None, 'processed': None}
-    shared_face = {'detected': None, 'validated': None, 'aligned': None}
-    shared_embedding = {'default': None}
 
     fps = 30
     log.info(f"Set FPS to {fps}...")
@@ -32,8 +26,7 @@ def main():
     device = 'GPU'
 
     deps = {
-        "lock": lock, "stop_event": stop_event, "run_state_event": run_state_event,
-        "shared_frames": shared_frames, "shared_face": shared_face, "shared_embedding": shared_embedding,
+        "stop_event": stop_event, "run_state_event": run_state_event,
         "log": log, "fps": fps, "device": device
     }
     classes = [VideoCapture, FaceDetection, FaceValidation, FaceAlignment, RecognitionArcFace, FaceVerification]
@@ -42,7 +35,7 @@ def main():
     pipeline_manager.build()
     pipeline_manager.run()
 
-    app = EnrollmentGUI(lock, shared_frames, stop_event, run_state_event, fps)
+    app = EnrollmentGUI(stop_event, run_state_event, fps)
     ft.app(target=app.app)
 
 
