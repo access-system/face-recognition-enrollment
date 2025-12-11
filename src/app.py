@@ -1,98 +1,58 @@
-import cv2
 import flet as ft
 
-from src.utils.timer import timer
-from src.utils.converters import frame_to_base64
+from src.ui.enrollment_view import EnrollmentView
 
 
 class EnrollmentGUI:
-    def __init__(self, lock, shared_frames, stop_event, run_state_event, fps=30):
+    def __init__(self, pipeline_manager, stop_event, run_state_event, fps=30):
         self.run_state_event = run_state_event
         self.stop_event = stop_event
         self.fps = fps
 
-        self.lock = lock
-        self.shared_frames = shared_frames
+        self.pipeline_manager = pipeline_manager
 
-        self.placeholder = ft.Container(
-            width=640,
-            height=480,
-            bgcolor=ft.Colors.GREY_100,
-            content=ft.Row(
-                controls=[ft.Icon(ft.Icons.CAMERA_ALT, size=100, color=ft.Colors.GREY_600)],
-                alignment=ft.MainAxisAlignment.CENTER,
-                vertical_alignment=ft.CrossAxisAlignment.CENTER,
-            ),
-        )
-
-        self.image = ft.Image(
-            src_base64="",
-            width=640,
-            height=480,
-            fit=ft.ImageFit.CONTAIN,
-        )
-
-        self.frame = ft.Stack(
-            controls=[self.placeholder, self.image],
-            width=640,
-            height=480,
-        )
-
-        self.run_state_btn = ft.ElevatedButton(
-            text="Start Enrollment",
-            on_click=self.toggle_enrollment,
-        )
-
-    def toggle_enrollment(self, e):
-        if not self.run_state_event.is_set():
-            self.run_state_event.set()
-        else:
-            self.run_state_event.clear()
-
-        self.run_state_btn.update()
-
-    def app(self, page: ft.Page):
+    def main(self, page: ft.Page):
         page.title = "Enrollment GUI"
         page.on_close = lambda e: self.stop_event.set()
 
-        page.add(
-            ft.Row(
-                [
-                    self.frame,
-                    self.run_state_btn,
-                ],
-                alignment=ft.MainAxisAlignment.CENTER,
-            )
+        def route_change(e):
+            page.views.clear()
+            page.views.append(self.create_home_view(page))
+            if page.route == "/enrollment":
+                page.views.append(self.create_enrollment_view(page))
+            page.update()
+
+        page.on_route_change = route_change
+        page.go("home")
+
+    def create_home_view(self, page):
+        def go_enrollment(e):
+            page.go("/enrollment")
+
+        return ft.View(
+            "/home",
+            [
+                ft.AppBar(title=ft.Text("Home"), bgcolor=ft.Colors.SURFACE),
+                ft.ElevatedButton("Go to Enrollment", on_click=go_enrollment),
+                ft.Text("Home page content")
+            ]
         )
 
-        @timer(self.fps, self.stop_event)
-        def update_frame():
-            with self.lock:
-                default_frame = self.shared_frames["default"]
+    def create_enrollment_view(self, page):
+        def back(e):
+            page.views.pop()
+            top_view = page.views[-1]
+            page.go(top_view.route)
+            page.update()
 
-            has_frame = default_frame is not None
-
-            # Toggle visibility
-            self.image.visible = has_frame
-            self.placeholder.visible = not has_frame
-
-            frame = self.select_frame()
-            frame = cv2.flip(frame, 1)
-
-            if has_frame:
-                self.image.src_base64 = frame_to_base64(frame)
-
-            self.image.update()
-            self.placeholder.update()
-
-        update_frame()
-
-    def select_frame(self):
-        with self.lock:
-            default_frame = self.shared_frames["default"]
-            processed_frame = self.shared_frames["processed"]
-
-        if processed_frame is not None:
-            return processed_frame
-        else:
-            return default_frame
+        return ft.View(
+            "/enrollment",
+            [
+                ft.AppBar(
+                    title=ft.Text("Enrollment"),
+                    bgcolor=ft.Colors.SURFACE,
+                    leading=ft.IconButton(ft.Icons.ARROW_BACK, on_click=back)
+                ),
+                EnrollmentView(self.stop_event, self.run_state_event,self.pipeline_manager, self.fps),
+            ]
+        )
