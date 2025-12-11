@@ -59,4 +59,5 @@ class BlackboardStateful:
 
     def reset_all(self) -> None:
         with BlackboardStateful._lock:
-            self._state = {k: None for k in self._state}
+            for k in list(self._state.keys()):
+                BlackboardStateful._shared_state[k] = None
