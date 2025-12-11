@@ -33,10 +33,9 @@ def main():
 
     pipeline_manager = PipelineManager(deps, classes)
     pipeline_manager.build()
-    pipeline_manager.run()
 
-    app = EnrollmentGUI(stop_event, run_state_event, fps)
-    ft.app(target=app.app)
+    app = EnrollmentGUI(pipeline_manager, stop_event, run_state_event, fps)
+    ft.app(target=app.main)
 
 
 if __name__ == '__main__':
