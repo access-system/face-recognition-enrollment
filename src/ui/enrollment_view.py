@@ -1,5 +1,3 @@
-import threading
-
 import cv2
 import flet as ft
 
@@ -8,7 +6,7 @@ from src.utils.converters import frame_to_base64
 from src.utils.timer import timer
 
 
-class EnrollmentView(ft.Column, BlackboardStateful):
+class EnrollmentView(ft.Row, BlackboardStateful):
     def __init__(self, stop_event, run_state_event, pipeline_manager, fps=30):
         super().__init__()
 
@@ -50,7 +48,12 @@ class EnrollmentView(ft.Column, BlackboardStateful):
 
         self.controls = [
             self.frame,
-            self.run_state_btn,
+            ft.Column(
+                height=480,
+                controls=[self.run_state_btn],
+                alignment=ft.MainAxisAlignment.CENTER,
+                horizontal_alignment=ft.CrossAxisAlignment.START,
+            ),
         ]
 
         self.alignment = ft.MainAxisAlignment.CENTER
