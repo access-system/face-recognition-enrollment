@@ -20,6 +20,6 @@ def timer(fps, stop_event):
                     sleep_time = max(0.0, frame_time - elapsed_time)
                     time.sleep(sleep_time)
 
-            threading.Thread(target=run).start()
+            threading.Thread(target=run, daemon=True).start()
         return wrapper
     return decorator
