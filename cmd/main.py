@@ -23,7 +23,7 @@ def main():
     fps = 30
     log.info(f"Set FPS to {fps}...")
 
-    device = 'GPU'
+    device = 'CPU'
 
     deps = {
         "stop_event": stop_event, "run_state_event": run_state_event,
